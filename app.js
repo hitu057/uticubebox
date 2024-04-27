@@ -1,16 +1,12 @@
 require("dotenv").config()
 const express = require('express')
+const bodyParser = require('body-parser')
+const organizationRoute = require('./api/controller/organization')
 const app = express()
-const mongoose = require('mongoose')
-const organizationRoute = require('./api/routes/organization')
+require('./config/database')
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
 
-mongoose.connect(process.env.DATABSE_URL)
-mongoose.connection.on('error', err => {
-    console.log('Database connection failed')
-})
-mongoose.connection.on('connected', connected => {
-    console.log('Database connected')
-})
 
 app.use('/organization', organizationRoute)
 app.use((req, res, next) => {
