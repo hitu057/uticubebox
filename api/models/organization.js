@@ -4,4 +4,4 @@ const orgSchema = new mongoose.Schema({
     name: String
 })
 
-module.exports = mongoose.model('Organization', orgSchema)
+module.exports = mongoose.model('organization', orgSchema)
