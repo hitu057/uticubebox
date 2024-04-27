@@ -1,9 +1,14 @@
-
-const express = require('express')
+require("dotenv").config()
+const cors = require('cors')
+const express = require("express")
 const app = express()
+app.use(express.json())
+app.use(cors({
+    origin: '*'
+}))
 app.get('/', (req, res) => {
-    res.send('Hello, World!');
+    res.send('Hello, World!')
 })
-app.listen(5721, () => {
-    console.log('Server is running on http://localhost:5721');
-});
+app.listen(process.env.PORT, () => {
+    console.log("server is running on PORT", process.env.PORT)
+})
