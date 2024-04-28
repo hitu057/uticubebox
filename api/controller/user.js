@@ -59,7 +59,7 @@ router.post('/login', (req, res, next) => {
                         name: userData?.name,
                         email: userData?.email,
                         mobile: userData?.mobile
-                    }, 'uticubebox', { expiresIn: '24h' })
+                    }, process.env.TOKENKEY, { expiresIn: '24h' })
                     res.status(200).json({
                         status: true,
                         message: "Login Successfull",
