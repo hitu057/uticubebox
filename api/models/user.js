@@ -6,6 +6,6 @@ const userSchema = new mongoose.Schema({
     mobile: Number,
     password: String,
     userType: String
-})
+}, { versionKey: false })
 
 module.exports = mongoose.model('user', userSchema)
