@@ -52,7 +52,7 @@ function saveUser(type, req, res, next) {
 function updateUser(type, req, res, next) {
     function updateData(data, id) {
         data.userType = type
-        User.findOneAndUpdate({ _id: id, deleted: false, orgId: data?.orgId }, data, { runValidators: true }).then(result => {
+        User.findOneAndUpdate({ _id: id, deleted: false, orgId: data?.orgId, userType: type }, data, { runValidators: true }).then(result => {
             if (result) {
                 return res.status(200).json({
                     status: true,
@@ -111,7 +111,7 @@ function updateUser(type, req, res, next) {
 function deleteUser(type, req, res, next) {
     try {
         const id = req?.params?.id
-        User.findOneAndUpdate({ _id: id, deleted: false }, { deleted: true }).then(result => {
+        User.findOneAndUpdate({ _id: id, deleted: false, userType: type }, { deleted: true }).then(result => {
             if (result) {
                 return res.status(200).json({
                     status: true,
@@ -138,7 +138,7 @@ function deleteUser(type, req, res, next) {
 function getFacultyById(req, res, next) {
     try {
         const id = req?.params?.id
-        User.find({ _id: id, deleted: false }).populate('orgId').populate('gender').populate('department').populate('qualification').populate('additionalRes').exec().then(result => {
+        User.find({ _id: id, deleted: false, userType: process?.env?.FACULTY }).populate('orgId').populate('gender').populate('department').populate('qualification').populate('additionalRes').exec().then(result => {
             if (result) {
                 return res.status(200).json({
                     status: true,
@@ -167,7 +167,7 @@ function getFacultyById(req, res, next) {
 
 function getFaculty(req, res, next) {
     try {
-        User.find({ deleted: false }).populate('orgId').populate('gender').populate('department').populate('qualification').populate('additionalRes').exec().then(result => {
+        User.find({ deleted: false, userType: process?.env?.FACULTY }).populate('orgId').populate('gender').populate('department').populate('qualification').populate('additionalRes').exec().then(result => {
             if (result) {
                 return res.status(200).json({
                     status: true,
@@ -195,7 +195,7 @@ function getFaculty(req, res, next) {
 }
 function getStudent(req, res, next) {
     try {
-        User.find({ deleted: false }).populate('orgId').populate('gender').populate('category').populate('addmissionBatch').exec().then(result => {
+        User.find({ deleted: false, userType: process?.env?.STUDENT }).populate('orgId').populate('gender').populate('category').populate('addmissionBatch').exec().then(result => {
             if (result) {
                 return res.status(200).json({
                     status: true,
@@ -225,7 +225,7 @@ function getStudent(req, res, next) {
 function getStudentById(req, res, next) {
     try {
         const id = req?.params?.id
-        User.find({ _id: id, deleted: false }).populate('orgId').populate('gender').populate('category').populate('addmissionBatch').exec().then(result => {
+        User.find({ _id: id, deleted: false, userType: process?.env?.STUDENT }).populate('orgId').populate('gender').populate('category').populate('addmissionBatch').exec().then(result => {
             if (result) {
                 return res.status(200).json({
                     status: true,
