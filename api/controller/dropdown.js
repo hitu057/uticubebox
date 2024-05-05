@@ -22,7 +22,7 @@ router.post('/', (req, res, next) => {
                 const errors = Object.values(err?.errors).map(error => error?.message)
                 return res.status(400).json({
                     status: false,
-                    message: errors.length > 0 ? errors?.[0] : errors
+                    message: errors?.length > 0 ? errors?.[0] : errors
                 })
             }
             res.status(500).json({
@@ -73,7 +73,7 @@ router.get('/:id', (req, res, next) => {
                 return res.status(200).json({
                     status: true,
                     message: "Dropdown data",
-                    data: result.length ? result[0] : []
+                    data: result?.length ? result[0] : []
                 })
             }
             res.status(400).json({
@@ -120,7 +120,7 @@ router.put('/:id', (req, res, next) => {
                 const errors = Object.values(err?.errors).map(error => error?.message)
                 return res.status(400).json({
                     status: false,
-                    message: errors.length > 0 ? errors?.[0] : errors
+                    message: errors?.length > 0 ? errors?.[0] : errors
                 })
             }
             res.status(500).json({
