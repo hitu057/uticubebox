@@ -3,7 +3,7 @@ const router = express.Router()
 const DropdownGroup = require('../models/dropdownGroup')
 const validateToken = require('../middleware/validate-token')
 
-router.post('/', (req, res, next) => {
+router.post('/', validateToken, (req, res, next) => {
     try {
         const dropdownGroup = new DropdownGroup(req?.body)
         dropdownGroup.save().then(result => {
@@ -38,7 +38,7 @@ router.post('/', (req, res, next) => {
     }
 })
 
-router.get('/', (req, res, next) => {
+router.get('/', validateToken, (req, res, next) => {
     try {
         DropdownGroup.find({ deleted: false }).populate('orgId').exec().then(result => {
             if (result?.length) {
@@ -65,7 +65,7 @@ router.get('/', (req, res, next) => {
         })
     }
 })
-router.get('/:id', (req, res, next) => {
+router.get('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
         DropdownGroup.find({ _id: id, deleted: false }).populate('orgId').exec().then(result => {
@@ -95,7 +95,7 @@ router.get('/:id', (req, res, next) => {
     }
 })
 
-router.put('/:id', (req, res, next) => {
+router.put('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
         DropdownGroup.findOneAndUpdate({ _id: id, deleted: false }, req?.body, { runValidators: true }).then(result => {
@@ -136,7 +136,7 @@ router.put('/:id', (req, res, next) => {
     }
 })
 
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
         DropdownGroup.findOneAndUpdate({ _id: id, deleted: false }, { deleted: true }).then(result => {

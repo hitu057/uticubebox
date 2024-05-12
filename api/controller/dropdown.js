@@ -3,7 +3,7 @@ const router = express.Router()
 const Dropdown = require('../models/dropdown')
 const validateToken = require('../middleware/validate-token')
 
-router.post('/', (req, res, next) => {
+router.post('/', validateToken, (req, res, next) => {
     try {
         const dropdown = new Dropdown(req?.body)
         dropdown.save().then(result => {
@@ -38,7 +38,7 @@ router.post('/', (req, res, next) => {
     }
 })
 
-router.get('/', (req, res, next) => {
+router.get('/', validateToken, (req, res, next) => {
     try {
         Dropdown.find({ deleted: false }).populate('orgId').populate('groupId').exec().then(result => {
             if (result) {
@@ -65,7 +65,7 @@ router.get('/', (req, res, next) => {
         })
     }
 })
-router.get('/:id', (req, res, next) => {
+router.get('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
         Dropdown.find({ _id: id, deleted: false }).populate('orgId').populate('groupId').exec().then(result => {
@@ -94,8 +94,37 @@ router.get('/:id', (req, res, next) => {
         })
     }
 })
+router.get('/group/:id', validateToken, (req, res, next) => {
+    try {
+        const groupId = req?.params?.id
+        Dropdown.find({ groupId: groupId, deleted: false }).populate('orgId').exec().then(result => {
+            if (result) {
+                return res.status(200).json({
+                    status: true,
+                    message: "Dropdown group data",
+                    data: result
+                })
+            }
+            res.status(400).json({
+                status: false,
+                message: "Invalid id Or it's already deleted",
+            })
 
-router.put('/:id', (req, res, next) => {
+        }).catch(err => {
+            res.status(500).json({
+                status: false,
+                message: "Error while fetching dropdown"
+            })
+        })
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Something went wrong"
+        })
+    }
+})
+
+router.put('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
         Dropdown.findOneAndUpdate({ _id: id, deleted: false }, req?.body, { runValidators: true }).then(result => {
@@ -136,7 +165,7 @@ router.put('/:id', (req, res, next) => {
     }
 })
 
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
         Dropdown.findOneAndUpdate({ _id: id, deleted: false }, { deleted: true }).then(result => {
