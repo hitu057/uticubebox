@@ -7,20 +7,20 @@ module.exports = (req, res, next) => {
             const verify = jwt?.verify(token, process.env.TOKENKEY)
             verify ? next() : res.status(401).json({
                 status: false,
-                message: "Invalid token"
+                message: "Provide valid token"
             })
         }
         else {
             res.status(401).json({
                 status: false,
-                message: "Invalid token"
+                message: "Provide valid token"
             })
         }
 
     } catch (error) {
         res.status(401).json({
             status: false,
-            message: "Invalid token"
+            message: "Provide valid token"
         })
     }
 }

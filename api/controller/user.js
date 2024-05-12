@@ -3,6 +3,7 @@ const router = express.Router()
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
+const validateToken = require('../middleware/validate-token')
 
 function saveUser(type, req, res, next) {
     try {
@@ -200,7 +201,7 @@ function getStudent(req, res, next) {
                 return res.status(200).json({
                     status: true,
                     message: "Student data",
-                    data: result?.length ? result[0] : []
+                    data: result
                 })
             }
             res.status(400).json({
@@ -251,43 +252,43 @@ function getStudentById(req, res, next) {
         })
     }
 }
-router.post('/faculty', (req, res, next) => {
+router.post('/faculty', validateToken, (req, res, next) => {
     saveUser(process?.env?.FACULTY, req, res, next)
 })
 
-router.put('/faculty/:id', (req, res, next) => {
+router.put('/faculty/:id', validateToken, (req, res, next) => {
     updateUser(process?.env?.FACULTY, req, res, next)
 })
 
-router.delete('/faculty/:id', (req, res, next) => {
+router.delete('/faculty/:id', validateToken, (req, res, next) => {
     deleteUser(process?.env?.FACULTY, req, res, next)
 })
 
-router.get('/faculty/:id', (req, res, next) => {
+router.get('/faculty/:id', validateToken, (req, res, next) => {
     getFacultyById(req, res, next)
 })
 
-router.get('/faculty', (req, res, next) => {
+router.get('/faculty', validateToken, (req, res, next) => {
     getFaculty(req, res, next)
 })
 
-router.post('/student', (req, res, next) => {
+router.post('/student', validateToken, (req, res, next) => {
     saveUser(process?.env?.STUDENT, req, res, next)
 })
 
-router.put('/student/:id', (req, res, next) => {
+router.put('/student/:id', validateToken, (req, res, next) => {
     updateUser(process?.env?.STUDENT, req, res, next)
 })
 
-router.delete('/student/:id', (req, res, next) => {
+router.delete('/student/:id', validateToken, (req, res, next) => {
     deleteUser(process?.env?.STUDENT, req, res, next)
 })
 
-router.get('/student/:id', (req, res, next) => {
+router.get('/student/:id', validateToken, (req, res, next) => {
     getStudentById(req, res, next)
 })
 
-router.get('/student', (req, res, next) => {
+router.get('/student', validateToken, (req, res, next) => {
     getStudent(req, res, next)
 })
 
@@ -309,7 +310,7 @@ router.post('/login', (req, res, next) => {
                 }
                 if (result) {
                     const userData = user?.[0]
-                    const { firstname, middelname, lastname, _id, email, mobile, userType, orgId } = userData
+                    const { firstname, middelname, lastname, _id, email, mobile, userType, orgId, profile } = userData
                     const token = jwt.sign({
                         _id,
                         orgId,
@@ -318,7 +319,8 @@ router.post('/login', (req, res, next) => {
                         lastname,
                         email,
                         mobile,
-                        userType
+                        userType,
+                        profile
                     }, process.env.TOKENKEY, { expiresIn: '24h' })
                     res.status(200).json({
                         status: true,
