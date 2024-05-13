@@ -3,7 +3,10 @@ const router = express.Router()
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
+const fileDestination = require('../../config/fileUpload')
 const validateToken = require('../middleware/validate-token')
+const allowedMimes = ['image/jpeg', 'image/png', 'image/jpg']
+const upload = fileDestination(process.env.USERIMAGES, allowedMimes)
 
 function saveUser(type, req, res, next) {
     try {
@@ -290,6 +293,44 @@ router.get('/student/:id', validateToken, (req, res, next) => {
 
 router.get('/student', validateToken, (req, res, next) => {
     getStudent(req, res, next)
+})
+
+router.patch('/saveUserImage/:id', validateToken, (req, res, next) => {
+    upload.single('profile')(req, res, (err) => {
+        if (err) {
+            return res.status(400).json({
+                success: false,
+                message: err
+            })
+        }
+        const id = req?.params?.id
+        if (req?.file?.filename) {
+            req.body.profile = req?.file?.filename
+            User.findOneAndUpdate({ _id: id, deleted: false }, req?.body, { runValidators: false }).then(result => {
+                if (result) {
+                    return res.status(200).json({
+                        status: true,
+                        message: `User profile uploaded successfully`
+                    })
+                }
+                res.status(400).json({
+                    status: false,
+                    message: "Invalid id Or it's already deleted",
+                })
+            }).catch(err => {
+                res.status(500).json({
+                    status: false,
+                    message: `Error while updating profile`
+                })
+            })
+        }
+        else{
+            res.status(200).json({
+                status: false,
+                message: `Please provide user image`
+            })
+        }
+    })
 })
 
 router.post('/login', (req, res, next) => {
