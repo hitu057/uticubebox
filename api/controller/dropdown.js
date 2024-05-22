@@ -15,7 +15,7 @@ router.post('/', validateToken, (req, res, next) => {
             if (err?.code === 11000 || err?.code === 11001) {
                 return res.status(400).json({
                     status: false,
-                    message: `${err?.message}`
+                    message: err?.message
                 })
             }
             if (err?.name === 'ValidationError') {
