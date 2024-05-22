@@ -5,10 +5,17 @@ module.exports = (req, res, next) => {
         const token = req?.headers?.authorization.split(' ')[1]
         if (token) {
             const verify = jwt?.verify(token, process.env.TOKENKEY)
-            verify ? next() : res.status(401).json({
-                status: false,
-                message: "Provide valid token"
-            })
+            if (verify) {
+                const decodedToken = jwt.decode(token, {complete: true})
+                req.body.orgId = decodedToken?.payload?.orgId
+                next()
+            }
+            else {
+                res.status(401).json({
+                    status: false,
+                    message: "Provide valid token"
+                })
+            }
         }
         else {
             res.status(401).json({

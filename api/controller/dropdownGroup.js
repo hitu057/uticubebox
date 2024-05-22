@@ -5,6 +5,7 @@ const validateToken = require('../middleware/validate-token')
 
 router.post('/', validateToken, (req, res, next) => {
     try {
+        req.body.groupName = req?.body?.name?.replace(/ /g, '-')?.toLowerCase()
         const dropdownGroup = new DropdownGroup(req?.body)
         dropdownGroup.save().then(result => {
             res.status(200).json({
@@ -40,7 +41,7 @@ router.post('/', validateToken, (req, res, next) => {
 
 router.get('/', validateToken, (req, res, next) => {
     try {
-        DropdownGroup.find({ deleted: false }).populate('orgId').exec().then(result => {
+        DropdownGroup.find({ deleted: false }).then(result => {
             if (result?.length) {
                 return res.status(200).json({
                     status: true,
@@ -68,7 +69,7 @@ router.get('/', validateToken, (req, res, next) => {
 router.get('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
-        DropdownGroup.find({ _id: id, deleted: false }).populate('orgId').exec().then(result => {
+        DropdownGroup.find({ _id: id, deleted: false }).then(result => {
             if (result?.length) {
                 return res.status(200).json({
                     status: true,
@@ -98,6 +99,7 @@ router.get('/:id', validateToken, (req, res, next) => {
 router.put('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
+        req.body.groupName = req?.body?.name?.replace(/ /g, '-')?.toLowerCase()
         DropdownGroup.findOneAndUpdate({ _id: id, deleted: false }, req?.body, { runValidators: true }).then(result => {
             if (result) {
                 return res.status(200).json({

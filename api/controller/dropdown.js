@@ -40,7 +40,7 @@ router.post('/', validateToken, (req, res, next) => {
 
 router.get('/', validateToken, (req, res, next) => {
     try {
-        Dropdown.find({ deleted: false }).populate('orgId').populate('groupId').exec().then(result => {
+        Dropdown.find({ deleted: false }).then(result => {
             if (result) {
                 return res.status(200).json({
                     status: true,
@@ -68,41 +68,12 @@ router.get('/', validateToken, (req, res, next) => {
 router.get('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
-        Dropdown.find({ _id: id, deleted: false }).populate('orgId').populate('groupId').exec().then(result => {
+        Dropdown.find({ _id: id, deleted: false }).then(result => {
             if (result) {
                 return res.status(200).json({
                     status: true,
                     message: "Dropdown data",
                     data: result?.length ? result[0] : []
-                })
-            }
-            res.status(400).json({
-                status: false,
-                message: "Invalid id Or it's already deleted",
-            })
-
-        }).catch(err => {
-            res.status(500).json({
-                status: false,
-                message: "Error while fetching dropdown"
-            })
-        })
-    } catch (error) {
-        res.status(500).json({
-            status: false,
-            message: "Something went wrong"
-        })
-    }
-})
-router.get('/group/:id', validateToken, (req, res, next) => {
-    try {
-        const groupId = req?.params?.id
-        Dropdown.find({ groupId: groupId, deleted: false }).populate('orgId').exec().then(result => {
-            if (result) {
-                return res.status(200).json({
-                    status: true,
-                    message: "Dropdown group data",
-                    data: result
                 })
             }
             res.status(400).json({
@@ -183,6 +154,36 @@ router.delete('/:id', validateToken, (req, res, next) => {
             res.status(500).json({
                 status: false,
                 message: "Error while deleting dropdown"
+            })
+        })
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Something went wrong"
+        })
+    }
+})
+
+router.get('/group/:id', validateToken, (req, res, next) => {
+    try {
+        const groupName = req?.params?.id
+        Dropdown.find({ groupName: groupName, deleted: false }).then(result => {
+            if (result) {
+                return res.status(200).json({
+                    status: true,
+                    message: "Dropdown group data",
+                    data: result
+                })
+            }
+            res.status(400).json({
+                status: false,
+                message: "Invalid id Or it's already deleted",
+            })
+
+        }).catch(err => {
+            res.status(500).json({
+                status: false,
+                message: "Error while fetching dropdown"
             })
         })
     } catch (error) {
