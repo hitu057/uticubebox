@@ -144,6 +144,9 @@ function getFacultyById(req, res, next) {
         const id = req?.params?.id
         User.find({ _id: id, deleted: false, userType: process?.env?.FACULTY }).populate('orgId').populate('gender').populate('department').populate('qualification').populate('additionalRes').exec().then(result => {
             if (result) {
+                result.map(item => {
+                    item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
+                })
                 return res.status(200).json({
                     status: true,
                     message: "Faculty data",
@@ -173,6 +176,9 @@ function getFaculty(req, res, next) {
     try {
         User.find({ deleted: false, userType: process?.env?.FACULTY }).populate('orgId').populate('gender').populate('department').populate('qualification').populate('additionalRes').exec().then(result => {
             if (result) {
+                result.map(item => {
+                    item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
+                })
                 return res.status(200).json({
                     status: true,
                     message: "Faculty data",
@@ -201,6 +207,9 @@ function getStudent(req, res, next) {
     try {
         User.find({ deleted: false, userType: process?.env?.STUDENT }).populate('orgId').populate('gender').populate('category').populate('addmissionBatch').exec().then(result => {
             if (result) {
+                result.map(item => {
+                    item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
+                })
                 return res.status(200).json({
                     status: true,
                     message: "Student data",
@@ -231,6 +240,9 @@ function getStudentById(req, res, next) {
         const id = req?.params?.id
         User.find({ _id: id, deleted: false, userType: process?.env?.STUDENT }).populate('orgId').populate('gender').populate('category').populate('addmissionBatch').exec().then(result => {
             if (result) {
+                result.map(item => {
+                    item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
+                })
                 return res.status(200).json({
                     status: true,
                     message: "Student data",
