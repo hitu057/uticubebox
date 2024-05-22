@@ -11,6 +11,7 @@ require('./config/database')
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
+app.use('/images', express.static('images'))
 app.use('/organization', organizationCnt)
 app.use('/dropdowngroup', dropdownGrpCnt)
 app.use('/dropdown', dropdownCnt)

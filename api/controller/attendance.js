@@ -5,8 +5,11 @@ const validateToken = require('../middleware/validate-token')
 
 router.get('/student', validateToken, (req, res, next) => {
     try {
-        Student.find({ deleted: false }).populate('orgId').populate('category').populate('addmissionBatch').populate('gender').exec().then(result => {
+        Student.find({ deleted: false, userType: 'student' }).populate('orgId').populate('category').populate('addmissionBatch').populate('gender').exec().then(result => {
             if (result) {
+                result.map(item => {
+                    item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
+                })
                 return res.status(200).json({
                     status: true,
                     message: "Student data",
