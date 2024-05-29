@@ -142,7 +142,7 @@ function deleteUser(type, req, res, next) {
 function getFacultyById(req, res, next) {
     try {
         const id = req?.params?.id
-        User.find({ _id: id, deleted: false, userType: process?.env?.FACULTY }).populate('orgId').populate('gender').populate('department').populate('qualification').populate('additionalRes').exec().then(result => {
+        User.find({ _id: id, deleted: false, userType: process?.env?.FACULTY }).populate('orgId').populate('gender').populate('department').populate('designation').populate('qualification').populate('additionalRes').exec().then(result => {
             if (result) {
                 result.map(item => {
                     item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
@@ -174,7 +174,7 @@ function getFacultyById(req, res, next) {
 
 function getFaculty(req, res, next) {
     try {
-        User.find({ deleted: false, userType: process?.env?.FACULTY }).populate('orgId').populate('gender').populate('department').populate('qualification').populate('additionalRes').exec().then(result => {
+        User.find({ deleted: false, userType: process?.env?.FACULTY }).populate('orgId').populate('gender').populate('department').populate('qualification').populate('designation').populate('additionalRes').exec().then(result => {
             if (result) {
                 result.map(item => {
                     item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
@@ -267,7 +267,7 @@ function getStudentById(req, res, next) {
         })
     }
 }
-router.post('/faculty', validateToken, (req, res, next) => {
+router.post('/faculty', (req, res, next) => {
     saveUser(process?.env?.FACULTY, req, res, next)
 })
 
@@ -291,8 +291,68 @@ router.post('/student', validateToken, (req, res, next) => {
     saveUser(process?.env?.STUDENT, req, res, next)
 })
 
+router.get('/studentAttendance', validateToken, (req, res, next) => {
+    try {
+        User.find({ deleted: false, userType: process?.env?.STUDENT }).populate('orgId').populate('gender').populate('category').exec().then(result => {
+            if (result) {
+                result.map(item => {
+                    item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
+                })
+                return res.status(200).json({
+                    status: true,
+                    message: "Student data",
+                    data: result
+                })
+            }
+            res.status(400).json({
+                status: false,
+                message: "Invalid id Or it's already deleted",
+            })
+
+        }).catch(err => {
+            res.status(500).json({
+                status: false,
+                message: "Error while fetching student"
+            })
+        })
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Something went wrong"
+        })
+    }
+})
+
 router.put('/student/:id', validateToken, (req, res, next) => {
     updateUser(process?.env?.STUDENT, req, res, next)
+})
+
+router.patch('/markAttendance/:id', validateToken, (req, res, next) => {
+    try {
+        const id = req?.params?.id
+        User.updateOne({ _id: id },{ $push: { attendance: req?.body } }).then(result => {
+            if (result) {
+                return res.status(200).json({
+                    status: true,
+                    message: `Attendance marked successfully`
+                })
+            }
+            res.status(400).json({
+                status: false,
+                message: "Invalid id Or it's already deleted",
+            })
+        }).catch(err => {
+            res.status(500).json({
+                status: false,
+                message: `Error while marking attendance`
+            })
+        })
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Something went wrong"
+        })
+    }
 })
 
 router.delete('/student/:id', validateToken, (req, res, next) => {
@@ -336,7 +396,7 @@ router.patch('/saveUserImage/:id', validateToken, (req, res, next) => {
                 })
             })
         }
-        else{
+        else {
             res.status(200).json({
                 status: false,
                 message: `Please provide user image`

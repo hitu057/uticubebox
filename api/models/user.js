@@ -21,7 +21,16 @@ const userSchema = new mongoose.Schema({
     additionalRes: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
     // student
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown', required: function () { return this.userType === process?.env?.STUDENT } },
-    addmissionBatch: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown', required: function () { return this.userType === process?.env?.STUDENT } },
+    addmissionBatch: [{
+        batch: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown', required: function () { return this.userType === process?.env?.STUDENT } },
+        class: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown', required: function () { return this.userType === process?.env?.STUDENT } }
+    }],
+    attendance: [{
+        faculty: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
+        class: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
+        department: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
+        timeRange: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' }
+    }],
     fatherName: { type: String, required: function () { return this.userType === process?.env?.STUDENT } },
     fatherMobile: { type: Number },
     motherName: { type: String },

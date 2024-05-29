@@ -41,16 +41,10 @@ router.post('/', validateToken, (req, res, next) => {
 router.get('/', validateToken, (req, res, next) => {
     try {
         Dropdown.find({ deleted: false }).then(result => {
-            if (result) {
-                return res.status(200).json({
-                    status: true,
-                    message: "Dropdown data",
-                    data: result
-                })
-            }
-            res.status(400).json({
-                status: false,
-                message: "Invalid id Or it's already deleted",
+            return res.status(200).json({
+                status: true,
+                message: "Dropdown data",
+                data: result
             })
         }).catch(err => {
             res.status(500).json({
@@ -168,18 +162,11 @@ router.get('/group/:id', validateToken, (req, res, next) => {
     try {
         const groupName = req?.params?.id
         Dropdown.find({ groupName: groupName, deleted: false }).then(result => {
-            if (result) {
-                return res.status(200).json({
-                    status: true,
-                    message: "Dropdown group data",
-                    data: result
-                })
-            }
-            res.status(400).json({
-                status: false,
-                message: "Invalid id Or it's already deleted",
+            return res.status(200).json({
+                status: true,
+                message: "Dropdown group data",
+                data: result
             })
-
         }).catch(err => {
             res.status(500).json({
                 status: false,

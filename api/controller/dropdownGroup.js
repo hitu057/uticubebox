@@ -42,16 +42,10 @@ router.post('/', validateToken, (req, res, next) => {
 router.get('/', validateToken, (req, res, next) => {
     try {
         DropdownGroup.find({ deleted: false }).then(result => {
-            if (result?.length) {
-                return res.status(200).json({
-                    status: true,
-                    message: "Dropdown group data",
-                    data: result
-                })
-            }
-            res.status(400).json({
-                status: false,
-                message: "Invalid id Or it's already deleted",
+            return res.status(200).json({
+                status: true,
+                message: "Dropdown group data",
+                data: result.length ? result : []
             })
         }).catch(err => {
             res.status(500).json({
