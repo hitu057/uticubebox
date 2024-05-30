@@ -1,16 +1,15 @@
 const express = require('express')
 const router = express.Router()
-const DropdownGroup = require('../models/dropdownGroup')
+const TimeTable = require('../models/timeTable')
 const validateToken = require('../middleware/validate-token')
 
 router.post('/', validateToken, (req, res, next) => {
     try {
-        req.body.groupName = req?.body?.name?.replace(/ /g, '-')?.toLowerCase()
-        const dropdownGroup = new DropdownGroup(req?.body)
-        dropdownGroup.save().then(result => {
+        const timeTable = new TimeTable(req?.body)
+        timeTable.save().then(result => {
             res.status(200).json({
                 status: true,
-                message: "Dropdown group added successfully"
+                message: "Timetable added successfully"
             })
         }).catch(err => {
             if (err?.code === 11000 || err?.code === 11001) {
@@ -28,7 +27,7 @@ router.post('/', validateToken, (req, res, next) => {
             }
             res.status(500).json({
                 status: false,
-                message: "Error while adding dropdown group"
+                message: "Error while adding timetable"
             })
         })
     } catch (error) {
@@ -41,16 +40,16 @@ router.post('/', validateToken, (req, res, next) => {
 
 router.get('/', validateToken, (req, res, next) => {
     try {
-        DropdownGroup.find({ deleted: false }).then(result => {
+        TimeTable.find({ deleted: false }).populate('class').populate('faculty').populate('timeRange').populate('department').populate('week').exec().then(result => {
             return res.status(200).json({
                 status: true,
-                message: "Dropdown group data",
+                message: "Timetable data",
                 data: result.length ? result : []
             })
         }).catch(err => {
             res.status(500).json({
                 status: false,
-                message: "Error while fetching dropdown group"
+                message: "Error while fetching timetable"
             })
         })
     } catch (error) {
@@ -63,11 +62,11 @@ router.get('/', validateToken, (req, res, next) => {
 router.get('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
-        DropdownGroup.find({ _id: id, deleted: false }).then(result => {
+        TimeTable.find({ _id: id, deleted: false }).then(result => {
             if (result?.length) {
                 return res.status(200).json({
                     status: true,
-                    message: "Dropdown group data",
+                    message: "Timetable data",
                     data: result?.length ? result[0] : []
                 })
             }
@@ -79,7 +78,7 @@ router.get('/:id', validateToken, (req, res, next) => {
         }).catch(err => {
             res.status(500).json({
                 status: false,
-                message: "Error while fetching dropdown group"
+                message: "Error while fetching timetable"
             })
         })
     } catch (error) {
@@ -93,11 +92,11 @@ router.get('/:id', validateToken, (req, res, next) => {
 router.put('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
-        DropdownGroup.findOneAndUpdate({ _id: id, deleted: false }, req?.body, { runValidators: true }).then(result => {
+        TimeTable.findOneAndUpdate({ _id: id, deleted: false }, req?.body, { runValidators: true }).then(result => {
             if (result) {
                 return res.status(200).json({
                     status: true,
-                    message: "Dropdown group update successfully",
+                    message: "Timetable update successfully",
                 })
             }
             res.status(400).json({
@@ -120,7 +119,7 @@ router.put('/:id', validateToken, (req, res, next) => {
             }
             res.status(500).json({
                 status: false,
-                message: "Error while updating dropdown group"
+                message: "Error while updating timetable"
             })
         })
     } catch (error) {
@@ -134,11 +133,11 @@ router.put('/:id', validateToken, (req, res, next) => {
 router.delete('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
-        DropdownGroup.findOneAndUpdate({ _id: id, deleted: false }, { deleted: true }).then(result => {
+        TimeTable.findOneAndUpdate({ _id: id, deleted: false }, { deleted: true }).then(result => {
             if (result) {
                 return res.status(200).json({
                     status: true,
-                    message: "Dropdown group deleted successfully",
+                    message: "Timetable deleted successfully",
                 })
             }
             res.status(400).json({
@@ -148,7 +147,7 @@ router.delete('/:id', validateToken, (req, res, next) => {
         }).catch(err => {
             res.status(500).json({
                 status: false,
-                message: "Error while deleting dropdown group"
+                message: "Error while deleting timetable"
             })
         })
     } catch (error) {

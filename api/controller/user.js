@@ -205,7 +205,7 @@ function getFaculty(req, res, next) {
 }
 function getStudent(req, res, next) {
     try {
-        User.find({ deleted: false, userType: process?.env?.STUDENT }).populate('orgId').populate('gender').populate('category').populate('addmissionBatch').exec().then(result => {
+        User.find({ deleted: false, userType: process?.env?.STUDENT }).populate('orgId').populate('gender').populate('category').populate('addmissionBatch.batch').populate('addmissionBatch.class').exec().then(result => {
             if (result) {
                 result.map(item => {
                     item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
@@ -238,7 +238,7 @@ function getStudent(req, res, next) {
 function getStudentById(req, res, next) {
     try {
         const id = req?.params?.id
-        User.find({ _id: id, deleted: false, userType: process?.env?.STUDENT }).populate('orgId').populate('gender').populate('category').populate('addmissionBatch').exec().then(result => {
+        User.find({ _id: id, deleted: false, userType: process?.env?.STUDENT }).populate('orgId').populate('gender').populate('category').populate('addmissionBatch.batch').populate('addmissionBatch.class').exec().then(result => {
             if (result) {
                 result.map(item => {
                     item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
@@ -291,24 +291,21 @@ router.post('/student', validateToken, (req, res, next) => {
     saveUser(process?.env?.STUDENT, req, res, next)
 })
 
-router.get('/studentAttendance', validateToken, (req, res, next) => {
+router.get('/studentAttendance/:class/:batch/:timeRange', validateToken, (req, res, next) => {
     try {
-        User.find({ deleted: false, userType: process?.env?.STUDENT }).populate('orgId').populate('gender').populate('category').exec().then(result => {
-            if (result) {
-                result.map(item => {
-                    item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
-                })
-                return res.status(200).json({
-                    status: true,
-                    message: "Student data",
-                    data: result
-                })
-            }
-            res.status(400).json({
-                status: false,
-                message: "Invalid id Or it's already deleted",
+        const classId = req?.params?.class
+        const batch = req?.params?.batch
+        const timeRange = req?.params?.timeRange
+        User.find({ deleted: false, userType: process?.env?.STUDENT, 'addmissionBatch.class': classId, 'addmissionBatch.batch': batch }).populate('orgId').populate('gender').populate('category').exec().then(result => {
+            result.map(item => {
+                item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
+                item.isAttendanceDone = item?.attendance.some(record => record?.batch == batch && record?.timeRange == timeRange)
             })
-
+            return res.status(200).json({
+                status: true,
+                message: "Student data",
+                data: result
+            })
         }).catch(err => {
             res.status(500).json({
                 status: false,
@@ -330,7 +327,7 @@ router.put('/student/:id', validateToken, (req, res, next) => {
 router.patch('/markAttendance/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
-        User.updateOne({ _id: id },{ $push: { attendance: req?.body } }).then(result => {
+        User.updateOne({ _id: id }, { $push: { attendance: req?.body } }).then(result => {
             if (result) {
                 return res.status(200).json({
                     status: true,
