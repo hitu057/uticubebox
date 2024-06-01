@@ -3,6 +3,7 @@ const router = express.Router()
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
+const Timetable = require('../models/timeTable')
 const fileDestination = require('../../config/fileUpload')
 const validateToken = require('../middleware/validate-token')
 const allowedMimes = ['image/jpeg', 'image/png', 'image/jpg']
@@ -320,29 +321,86 @@ router.get('/studentAttendance/:class/:batch/:timeRange', validateToken, (req, r
     }
 })
 
-router.put('/student/:id', validateToken, (req, res, next) => {
-    updateUser(process?.env?.STUDENT, req, res, next)
-})
-
-router.patch('/markAttendance/:id', validateToken, (req, res, next) => {
+router.post('/validateFaculty', validateToken, (req, res, next) => {
     try {
-        const id = req?.params?.id
-        User.updateOne({ _id: id }, { $push: { attendance: req?.body } }).then(result => {
-            if (result) {
-                return res.status(200).json({
-                    status: true,
-                    message: `Attendance marked successfully`
+        User.find({ _id: req?.body?.faculty, orgId: req?.body?.orgId, deleted: false,userType: process?.env?.FACULTY }).then(user => {
+            if (!user?.length) {
+                return res.status(401).json({
+                    status: false,
+                    message: "Faculty not exist"
                 })
             }
-            res.status(400).json({
-                status: false,
-                message: "Invalid id Or it's already deleted",
+            bcrypt.compare(req?.body?.password, user?.[0]?.password, (err, result) => {
+                if (!result) {
+                    return res.status(401).json({
+                        status: false,
+                        message: "Password not match"
+                    })
+                }
+                if (result) {
+                    Timetable.find({ faculty: req?.body?.faculty,class:req?.body?.class,department:req?.body?.department,timeRange:req?.body?.timeRange, orgId: req?.body?.orgId, deleted: false }).then(timetable => {
+                        if (timetable?.length) {
+                            return res.status(200).json({
+                                status: true,
+                                message: "Faculty validated successfully"
+                            })
+                        }
+                        res.status(400).json({
+                            status: false,
+                            message: "Faculty not assigned to any class",
+                        })
+                    }).catch(err => {
+                        res.status(500).json({
+                            status: false,
+                            message: "Error while validating faculty"
+                        })
+                    })
+                }
+                else {
+                    res.status(500).json({
+                        status: false,
+                        message: "Something went wrong"
+                    })
+                }
             })
         }).catch(err => {
             res.status(500).json({
                 status: false,
-                message: `Error while marking attendance`
+                message: "Error while validating faculty"
             })
+        })
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Something went wrong"
+        })
+    }
+})
+
+router.put('/student/:id', validateToken, (req, res, next) => {
+    updateUser(process?.env?.STUDENT, req, res, next)
+})
+
+router.patch('/markManualAttendance', validateToken, (req, res, next) => {
+    try {
+        req?.body?.attendanceData?.forEach(data => {
+            User.updateOne({ _id: data?.student }, { $push: { attendance: data} }).then(result => {
+                if (!result) {
+                    res.status(400).json({
+                        status: false,
+                        message: "Invalid id Or it's already deleted",
+                    })
+                }
+            }).catch(err => {
+                res.status(500).json({
+                    status: false,
+                    message: `Error while marking attendance`
+                })
+            })  
+        })
+        res.status(200).json({
+            status: true,
+            message: "Attendance marked successfully"
         })
     } catch (error) {
         res.status(500).json({

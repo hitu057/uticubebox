@@ -30,7 +30,8 @@ const userSchema = new mongoose.Schema({
         class: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
         batch: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
         department: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
-        timeRange: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' }
+        timeRange: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
+        createdAt: { type: Date, default: Date.now }
     }],
     fatherName: { type: String, required: function () { return this.userType === process?.env?.STUDENT } },
     fatherMobile: { type: Number },
