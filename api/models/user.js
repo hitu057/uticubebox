@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema({
         batch: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
         department: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
         timeRange: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
+        remark: { type: String },
         createdAt: { type: Date, default: Date.now }
     }],
     fatherName: { type: String, required: function () { return this.userType === process?.env?.STUDENT } },
