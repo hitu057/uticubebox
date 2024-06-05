@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema({
         department: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
         timeRange: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
         remark: { type: String },
+        attendanceStatus: { type: Boolean },
         createdAt: { type: Date, default: Date.now }
     }],
     fatherName: { type: String, required: function () { return this.userType === process?.env?.STUDENT } },

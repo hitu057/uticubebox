@@ -300,7 +300,7 @@ router.get('/studentAttendance/:class/:batch/:timeRange', validateToken, (req, r
         User.find({ deleted: false, userType: process?.env?.STUDENT, 'addmissionBatch.class': classId, 'addmissionBatch.batch': batch }).populate('orgId').populate('gender').populate('category').exec().then(result => {
             result.map(item => {
                 item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
-                item.isAttendanceDone = item?.attendance.some(record => record?.batch == batch && record?.timeRange == timeRange)
+                item.isAttendanceDone = item?.attendance.some(record => record?.batch == batch && record?.timeRange == timeRange && record?.attendanceStatus)
             })
             return res.status(200).json({
                 status: true,
