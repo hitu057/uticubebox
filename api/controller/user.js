@@ -102,8 +102,10 @@ function updateUser(type, req, res, next) {
                 updateData(req?.body, id)
             })
         }
-        else
+        else{
+            delete req?.body?.password
             updateData(req?.body, id)
+        }
 
     } catch (error) {
         res.status(500).json({
@@ -292,35 +294,6 @@ router.post('/student', validateToken, (req, res, next) => {
     saveUser(process?.env?.STUDENT, req, res, next)
 })
 
-router.get('/studentAttendance/:class/:batch/:timeRange', validateToken, (req, res, next) => {
-    try {
-        const classId = req?.params?.class
-        const batch = req?.params?.batch
-        const timeRange = req?.params?.timeRange
-        User.find({ deleted: false, userType: process?.env?.STUDENT, 'addmissionBatch.class': classId, 'addmissionBatch.batch': batch }).populate('orgId').populate('gender').populate('category').exec().then(result => {
-            result.map(item => {
-                item.profile = item?.profile ? `${process?.env?.USERIMAGES}${item?.profile}` : null
-                item.isAttendanceDone = item?.attendance.some(record => record?.batch == batch && record?.timeRange == timeRange && record?.attendanceStatus)
-            })
-            return res.status(200).json({
-                status: true,
-                message: "Student data",
-                data: result
-            })
-        }).catch(err => {
-            res.status(500).json({
-                status: false,
-                message: "Error while fetching student"
-            })
-        })
-    } catch (error) {
-        res.status(500).json({
-            status: false,
-            message: "Something went wrong"
-        })
-    }
-})
-
 router.post('/validateFaculty', validateToken, (req, res, next) => {
     try {
         User.find({ _id: req?.body?.faculty, orgId: req?.body?.orgId, deleted: false,userType: process?.env?.FACULTY }).then(user => {
@@ -379,35 +352,6 @@ router.post('/validateFaculty', validateToken, (req, res, next) => {
 
 router.put('/student/:id', validateToken, (req, res, next) => {
     updateUser(process?.env?.STUDENT, req, res, next)
-})
-
-router.patch('/markManualAttendance', validateToken, (req, res, next) => {
-    try {
-        req?.body?.attendanceData?.forEach(data => {
-            User.updateOne({ _id: data?.student }, { $push: { attendance: data} }).then(result => {
-                if (!result) {
-                    res.status(400).json({
-                        status: false,
-                        message: "Invalid id Or it's already deleted",
-                    })
-                }
-            }).catch(err => {
-                res.status(500).json({
-                    status: false,
-                    message: `Error while marking attendance`
-                })
-            })  
-        })
-        res.status(200).json({
-            status: true,
-            message: "Attendance marked successfully"
-        })
-    } catch (error) {
-        res.status(500).json({
-            status: false,
-            message: "Something went wrong"
-        })
-    }
 })
 
 router.delete('/student/:id', validateToken, (req, res, next) => {

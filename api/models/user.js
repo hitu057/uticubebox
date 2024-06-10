@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const userSchema = new mongoose.Schema({
     orgId: { type: mongoose.Schema.Types.ObjectId, ref: 'organization', required: true },
     email: { type: String, required: true, unique: true, match: /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/ },
-    password: { type: String, required: true },
+    password: { type: String },
     mobile: { type: Number, required: true, unique: true },
     firstname: { type: String, required: true },
     middelname: { type: String },
@@ -25,16 +25,6 @@ const userSchema = new mongoose.Schema({
         batch: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown', required: function () { return this.userType === process?.env?.STUDENT } },
         class: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown', required: function () { return this.userType === process?.env?.STUDENT } }
     }],
-    attendance: [{
-        faculty: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
-        class: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
-        batch: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
-        department: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
-        timeRange: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
-        remark: { type: String },
-        attendanceStatus: { type: Boolean },
-        createdAt: { type: Date, default: Date.now }
-    }],
     fatherName: { type: String, required: function () { return this.userType === process?.env?.STUDENT } },
     fatherMobile: { type: Number },
     motherName: { type: String },
@@ -44,7 +34,6 @@ const userSchema = new mongoose.Schema({
     guardianName: { type: String },
     guardianMobile: { type: Number },
     roomNumber: { type: Number },
-    isAttendanceDone: { type: Boolean},
     deleted: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 }, { versionKey: false })
