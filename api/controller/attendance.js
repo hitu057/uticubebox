@@ -6,7 +6,7 @@ const validateToken = require('../middleware/validate-token')
 
 router.patch('/markManualAttendance', validateToken, (req, res, next) => {
     try {
-        Attendance.updateOne({ _id: req?.body?._id }, { attendanceData:req?.body?.attendanceData }).then(result => {
+        Attendance.updateOne({ _id: req?.body?._id }, { attendanceData: req?.body?.attendanceData }).then(result => {
             res.status(200).json({
                 status: true,
                 message: `Attendance marked successfully`
@@ -27,6 +27,7 @@ router.patch('/markManualAttendance', validateToken, (req, res, next) => {
 
 router.post('/startAttendance', validateToken, (req, res, next) => {
     try {
+        const today = new Date()?.toISOString()?.split('T')?.[0]
         const classId = req?.body?.class
         const batch = req?.body?.batch
         Attendance.find({ addedAt: today, deleted: false, class: req?.body?.class, timeRange: req?.body?.timeRange, faculty: req?.body?.faculty, batch: req?.body?.batch, department: req?.body?.department }).then(result => {
