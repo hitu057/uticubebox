@@ -70,8 +70,8 @@ router.post('/startAttendance', validateToken, (req, res, next) => {
                 })
             }
             else {
-                res.status(400).json({
-                    status: false,
+                res.status(200).json({
+                    status: true,
                     message: "Attendance already started"
                 })
             }
