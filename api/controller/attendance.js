@@ -120,7 +120,7 @@ router.post('/startAttendance', validateToken, (req, res, next) => {
 router.post('/studentAttendance', validateToken, (req, res, next) => {
     try {
         const today = new Date()?.toISOString()?.split('T')?.[0]
-        Attendance.find({ addedAt: today, deleted: false, class: req?.body?.class, timeRange: req?.body?.timeRange, faculty: req?.body?.faculty, batch: req?.body?.batch, department: req?.body?.department }).then(result => {
+        Attendance.find({ addedAt: today, deleted: false, class: req?.body?.class, timeRange: req?.body?.timeRange, faculty: req?.body?.faculty, batch: req?.body?.batch, department: req?.body?.department }).populate('attendanceData.student').then(result => {
             res.status(200).json({
                 status: true,
                 message: "Student data",
