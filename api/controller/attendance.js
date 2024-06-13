@@ -25,6 +25,34 @@ router.patch('/markManualAttendance', validateToken, (req, res, next) => {
     }
 })
 
+router.patch('/markAutomaticAttendance', validateToken, (req, res, next) => {
+    try {
+        Attendance.updateOne({ 'attendanceData._id': req?.body?._id },
+            {
+                $set: {
+                    'attendanceData.$[elem].attendanceStatus': req?.body?.attendanceStatus,
+                    'attendanceData.$[elem].remark': req?.body?.remark,
+                },
+            },
+            { arrayFilters: [{ 'elem._id': req?.body?._id }] }).then(result => {
+                res.status(200).json({
+                    status: true,
+                    message: `Attendance marked successfully`
+                })
+            }).catch(err => {
+                res.status(500).json({
+                    status: false,
+                    message: `Error while marking attendance`
+                })
+            })
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Something went wrong"
+        })
+    }
+})
+
 router.post('/startAttendance', validateToken, (req, res, next) => {
     try {
         const today = new Date()?.toISOString()?.split('T')?.[0]
