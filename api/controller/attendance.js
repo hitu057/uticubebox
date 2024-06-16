@@ -3,6 +3,56 @@ const router = express.Router()
 const Attendance = require('../models/attendance')
 const User = require('../models/user')
 const validateToken = require('../middleware/validate-token')
+const faceapi = require('face-api.js')
+const canvas = require('canvas')
+const path = require('path')
+const { Canvas, Image, ImageData } = canvas
+faceapi.env.monkeyPatch({ Canvas, Image, ImageData })
+const MODEL_URL = path.join(__dirname, '../../models')
+let modelsLoaded = false
+
+async function loadModels() {
+    if (!modelsLoaded) {
+        try {
+            await faceapi.nets.tinyFaceDetector.loadFromDisk(MODEL_URL)
+            await faceapi.nets.faceLandmark68Net.loadFromDisk(MODEL_URL)
+            await faceapi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL)
+            modelsLoaded = true
+        } catch (error) {
+            throw error
+        }
+    }
+}
+
+async function loadImage(imagePath) {
+    const img = await canvas.loadImage(imagePath)
+    const canvasInstance = canvas.createCanvas(224, 224)
+    const ctx = canvasInstance.getContext('2d')
+    ctx.drawImage(img, 0, 0, 224, 224)
+    return canvasInstance
+}
+
+async function compareFaces(image1Path, image2Path) {
+    try {
+        await loadModels()
+        const img1 = await loadImage(image1Path)
+        const img2 = await loadImage(image2Path)
+        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
+        const detections1 = await faceapi.detectAllFaces(img1, options).withFaceLandmarks().withFaceDescriptors()
+        const detections2 = await faceapi.detectAllFaces(img2, options).withFaceLandmarks().withFaceDescriptors()
+        if (!detections1.length || !detections2.length) {
+            return false
+        }
+        const faceMatcher = new faceapi.FaceMatcher(detections1)
+        const bestMatch = detections2.map(fd => faceMatcher.findBestMatch(fd.descriptor))
+        const threshold = 0.6 // Adjust this threshold based on your requirements
+        const isMatch = bestMatch.some(match => match.distance < threshold)
+        return isMatch
+    } catch (error) {
+        console.error('Error comparing faces:', error)
+        return false
+    }
+}
 
 router.patch('/markManualAttendance', validateToken, (req, res, next) => {
     try {
@@ -25,6 +75,17 @@ router.patch('/markManualAttendance', validateToken, (req, res, next) => {
     }
 })
 
+router.patch('/compareFace', validateToken, (req, res, next) => {
+    const image1Path = path.join(__dirname, '../../compare-image/1.jpg')
+    const image2Path = path.join(__dirname, '../../compare-image/2.jpg')
+    compareFaces(image1Path, image2Path).then(isMatch => {
+        res.status(200).json({
+            status: true,
+            message: isMatch ? 'The faces match.' : 'The faces do not match.'
+        })
+    })
+})
+
 router.patch('/markAutomaticAttendance', validateToken, (req, res, next) => {
     try {
         Attendance.updateOne({ 'attendanceData._id': req?.body?._id },
@@ -32,7 +93,7 @@ router.patch('/markAutomaticAttendance', validateToken, (req, res, next) => {
                 $set: {
                     'attendanceData.$[elem].attendanceStatus': req?.body?.attendanceStatus,
                     'attendanceData.$[elem].remark': req?.body?.remark,
-                },
+                }
             },
             { arrayFilters: [{ 'elem._id': req?.body?._id }] }).then(result => {
                 res.status(200).json({
