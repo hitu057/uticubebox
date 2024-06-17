@@ -40,7 +40,7 @@ router.post('/', validateToken, (req, res, next) => {
 
 router.get('/', validateToken, (req, res, next) => {
     try {
-        Dropdown.find({ deleted: false }).then(result => {
+        Dropdown.find({ deleted: false }, { deleted: 0, createdAt: 0, orgId: 0 }).then(result => {
             return res.status(200).json({
                 status: true,
                 message: "Dropdown data",
@@ -62,12 +62,12 @@ router.get('/', validateToken, (req, res, next) => {
 router.get('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
-        Dropdown.find({ _id: id, deleted: false }).then(result => {
-            if (result) {
+        Dropdown.find({ _id: id, deleted: false }, { deleted: 0, createdAt: 0, orgId: 0 }).then(result => {
+            if (result?.length) {
                 return res.status(200).json({
                     status: true,
                     message: "Dropdown data",
-                    data: result?.length ? result[0] : []
+                    data: result?.[0]
                 })
             }
             res.status(400).json({
@@ -161,11 +161,17 @@ router.delete('/:id', validateToken, (req, res, next) => {
 router.get('/group/:id', validateToken, (req, res, next) => {
     try {
         const groupName = req?.params?.id
-        Dropdown.find({ groupName: groupName, deleted: false }).then(result => {
-            return res.status(200).json({
-                status: true,
-                message: "Dropdown group data",
-                data: result
+        Dropdown.find({ groupName: groupName, deleted: false }, { _id: 1, name: 1 }).then(result => {
+            if (result) {
+                return res.status(200).json({
+                    status: true,
+                    message: "Dropdown group data",
+                    data: result
+                })
+            }
+            res.status(400).json({
+                status: false,
+                message: "Invalid group name"
             })
         }).catch(err => {
             res.status(500).json({

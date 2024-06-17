@@ -40,7 +40,7 @@ router.post('/', validateToken, (req, res, next) => {
 
 router.get('/', validateToken, (req, res, next) => {
     try {
-        TimeTable.find({ deleted: false }).populate('class').populate('faculty').populate('timeRange').populate('department').populate('week').exec().then(result => {
+        TimeTable.find({ deleted: false },{_id:1}).populate('class','name').populate({path: 'faculty',select: 'firstname middelname lastname'}).populate('timeRange','name').populate('department','name').populate('week','name').exec().then(result => {
             return res.status(200).json({
                 status: true,
                 message: "Timetable data",
@@ -62,7 +62,7 @@ router.get('/', validateToken, (req, res, next) => {
 router.get('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
-        TimeTable.find({ _id: id, deleted: false }).then(result => {
+        TimeTable.find({ _id: id, deleted: false },{deleted:0,createdAt:0,orgId:0}).then(result => {
             if (result?.length) {
                 return res.status(200).json({
                     status: true,

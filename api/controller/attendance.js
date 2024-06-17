@@ -59,10 +59,16 @@ async function compareFaces(image1Path, image2Path) {
 
 router.patch('/markManualAttendance', validateToken, (req, res, next) => {
     try {
-        Attendance.updateOne({ _id: req?.body?._id }, { attendanceData: req?.body?.attendanceData }).then(result => {
-            res.status(200).json({
-                status: true,
-                message: `Attendance marked successfully`
+        Attendance.updateOne({ _id: req?.body?._id,deleted:false }, { attendanceData: req?.body?.attendanceData }).then(result => {
+            if(result?.matchedCount > 0){
+                return res.status(200).json({
+                    status: true,
+                    message: `Attendance marked successfully`
+                })
+            }
+            res.status(500).json({
+                status: false,
+                message: `Session not found`
             })
         }).catch(err => {
             res.status(500).json({
@@ -88,7 +94,7 @@ router.patch('/markAutomaticAttendance', validateToken, (req, res, next) => {
         }
         if (req?.file?.filename) {
             try {
-                const image1Path = path.join(__dirname, '../../images/user/'+ req?.body?.image)
+                const image1Path = path.join(__dirname, '../../images/user/' + req?.body?.image)
                 const image2Path = path.join(__dirname, '../../compare-image/' + req?.file?.filename)
                 compareFaces(image1Path, image2Path).then(isMatch => {
                     fs.unlink(image2Path, (err => {
@@ -101,7 +107,7 @@ router.patch('/markAutomaticAttendance', validateToken, (req, res, next) => {
                             message: 'Face not matched'
                         })
                     }
-                    Attendance.updateOne({ 'attendanceData._id': req?.body?.id },
+                    Attendance.updateOne({ 'attendanceData._id': req?.body?.id,deleted:false },
                         {
                             $set: {
                                 'attendanceData.$[elem].attendanceStatus': req?.body?.attendanceStatus,
@@ -109,9 +115,15 @@ router.patch('/markAutomaticAttendance', validateToken, (req, res, next) => {
                             }
                         },
                         { arrayFilters: [{ 'elem._id': req?.body?.id }] }).then(result => {
-                            res.status(200).json({
-                                status: true,
-                                message: `Attendance marked successfully`
+                            if(result?.matchedCount > 0){
+                                return res.status(200).json({
+                                    status: true,
+                                    message: `Attendance marked successfully`
+                                })
+                            }
+                            res.status(500).json({
+                                status: false,
+                                message: `Session not found`
                             })
                         }).catch(err => {
                             res.status(500).json({
@@ -136,7 +148,7 @@ router.patch('/markAutomaticAttendance', validateToken, (req, res, next) => {
                 })
             }
         }
-        else{
+        else {
             res.status(500).json({
                 status: false,
                 message: "Image not found"
@@ -149,10 +161,10 @@ router.post('/startAttendance', validateToken, (req, res, next) => {
     try {
         const today = new Date()?.toISOString()?.split('T')?.[0]
         const classId = req?.body?.class
-        const batch = req?.body?.batch
-        Attendance.find({ addedAt: today, deleted: false, class: req?.body?.class, timeRange: req?.body?.timeRange, faculty: req?.body?.faculty, batch: req?.body?.batch, department: req?.body?.department }).then(result => {
+        const batchId = req?.body?.batch
+        Attendance.find({ addedAt: today, class: classId, timeRange: req?.body?.timeRange, faculty: req?.body?.faculty, batch: batchId, department: req?.body?.department }).then(result => {
             if (result?.length == 0) {
-                User.find({ deleted: false, userType: process?.env?.STUDENT, 'addmissionBatch.class': classId, 'addmissionBatch.batch': batch }).then(student => {
+                User.find({ deleted: false, userType: process?.env?.STUDENT, 'addmissionBatch.class': classId, 'addmissionBatch.batch': batchId }).then(student => {
                     if (student?.length) {
                         const attendanceData = student.map(item => {
                             return {
@@ -167,12 +179,12 @@ router.post('/startAttendance', validateToken, (req, res, next) => {
                         attendance.save().then(response => {
                             res.status(200).json({
                                 status: true,
-                                message: "Attendance started successfully"
+                                message: "Session started successfully"
                             })
                         }).catch(err => {
                             res.status(500).json({
                                 status: false,
-                                message: "Error while starting attendance1"
+                                message: "Error while starting session"
                             })
                         })
                     }
@@ -185,20 +197,59 @@ router.post('/startAttendance', validateToken, (req, res, next) => {
                 }).catch(err => {
                     res.status(500).json({
                         status: false,
-                        message: "Error while starting attendance2"
+                        message: "Error while starting session"
                     })
                 })
             }
             else {
                 res.status(200).json({
                     status: true,
-                    message: "Attendance already started"
+                    message: "Session already started"
                 })
             }
         }).catch(err => {
             res.status(500).json({
                 status: false,
-                message: "Error while fetching student"
+                message: "Error while fetching session"
+            })
+        })
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Something went wrong"
+        })
+    }
+})
+
+router.post('/stopAttendance', validateToken, (req, res, next) => {
+    try {
+        const today = new Date()?.toISOString()?.split('T')?.[0]
+        const classId = req?.body?.class
+        const batchId = req?.body?.batch
+        Attendance.find({ addedAt: today, deleted: false, class: classId, timeRange: req?.body?.timeRange, faculty: req?.body?.faculty, batch: batchId, department: req?.body?.department }).then(result => {
+            if (result?.length) {
+                Attendance.findByIdAndUpdate({ _id: result?.[0]?._id }, { deleted: true }).then(response => {
+                    res.status(200).json({
+                        status: true,
+                        message: "Session stopped successfully"
+                    })
+                }).catch(err => {
+                    res.status(500).json({
+                        status: false,
+                        message: "Error while stopping attendance"
+                    })
+                })
+            }
+            else {
+                res.status(400).json({
+                    status: false,
+                    message: "Session not found"
+                })
+            }
+        }).catch(err => {
+            res.status(500).json({
+                status: false,
+                message: "Error while fetching session"
             })
         })
     } catch (error) {
@@ -212,7 +263,7 @@ router.post('/startAttendance', validateToken, (req, res, next) => {
 router.post('/studentAttendance', validateToken, (req, res, next) => {
     try {
         const today = new Date()?.toISOString()?.split('T')?.[0]
-        Attendance.find({ addedAt: today, deleted: false, class: req?.body?.class, timeRange: req?.body?.timeRange, faculty: req?.body?.faculty, batch: req?.body?.batch, department: req?.body?.department }).populate('attendanceData.student').then(result => {
+        Attendance.find({ addedAt: today, deleted: false, class: req?.body?.class, timeRange: req?.body?.timeRange, faculty: req?.body?.faculty, batch: req?.body?.batch, department: req?.body?.department },{_id:1,attendanceData:1}).populate({path: 'attendanceData.student',select: 'firstname middelname lastname profile'}).then(result => {
             res.status(200).json({
                 status: true,
                 message: "Student data",

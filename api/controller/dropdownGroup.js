@@ -41,7 +41,7 @@ router.post('/', validateToken, (req, res, next) => {
 
 router.get('/', validateToken, (req, res, next) => {
     try {
-        DropdownGroup.find({ deleted: false }).then(result => {
+        DropdownGroup.find({ deleted: false }, { deleted: 0, createdAt: 0, orgId: 0 }).then(result => {
             return res.status(200).json({
                 status: true,
                 message: "Dropdown group data",
@@ -63,7 +63,7 @@ router.get('/', validateToken, (req, res, next) => {
 router.get('/:id', validateToken, (req, res, next) => {
     try {
         const id = req?.params?.id
-        DropdownGroup.find({ _id: id, deleted: false }).then(result => {
+        DropdownGroup.find({ _id: id, deleted: false },{ deleted: 0, createdAt: 0, orgId: 0 }).then(result => {
             if (result?.length) {
                 return res.status(200).json({
                     status: true,

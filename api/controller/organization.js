@@ -27,7 +27,7 @@ router.post('/', validateToken, (req, res, next) => {
 
 router.get('/', (req, res, next) => {
     try {
-        Organization.find({}, { deleted: 0, createdAt: 0 }).then(result => {
+        Organization.find({deleted:false}, { deleted: 0, createdAt: 0 }).then(result => {
             res.status(200).json({
                 status: true,
                 message: "Organization data",
