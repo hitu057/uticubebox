@@ -10,6 +10,10 @@ const { Canvas, Image, ImageData } = canvas
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData })
 const MODEL_URL = path.join(__dirname, '../../models')
 let modelsLoaded = false
+const fileDestination = require('../../config/fileUpload')
+const allowedMimes = ['image/jpeg', 'image/png', 'image/jpg']
+const upload = fileDestination(process.env.COMPAREIMAGE, allowedMimes)
+const fs = require('fs')
 
 async function loadModels() {
     if (!modelsLoaded) {
@@ -45,11 +49,10 @@ async function compareFaces(image1Path, image2Path) {
         }
         const faceMatcher = new faceapi.FaceMatcher(detections1)
         const bestMatch = detections2.map(fd => faceMatcher.findBestMatch(fd.descriptor))
-        const threshold = 0.6 // Adjust this threshold based on your requirements
+        const threshold = 0.6
         const isMatch = bestMatch.some(match => match.distance < threshold)
         return isMatch
     } catch (error) {
-        console.error('Error comparing faces:', error)
         return false
     }
 }
@@ -75,43 +78,71 @@ router.patch('/markManualAttendance', validateToken, (req, res, next) => {
     }
 })
 
-router.patch('/compareFace', validateToken, (req, res, next) => {
-    const image1Path = path.join(__dirname, '../../compare-image/1.jpg')
-    const image2Path = path.join(__dirname, '../../compare-image/2.jpg')
-    compareFaces(image1Path, image2Path).then(isMatch => {
-        res.status(200).json({
-            status: true,
-            message: isMatch ? 'The faces match.' : 'The faces do not match.'
-        })
-    })
-})
-
 router.patch('/markAutomaticAttendance', validateToken, (req, res, next) => {
-    try {
-        Attendance.updateOne({ 'attendanceData._id': req?.body?._id },
-            {
-                $set: {
-                    'attendanceData.$[elem].attendanceStatus': req?.body?.attendanceStatus,
-                    'attendanceData.$[elem].remark': req?.body?.remark,
-                }
-            },
-            { arrayFilters: [{ 'elem._id': req?.body?._id }] }).then(result => {
-                res.status(200).json({
-                    status: true,
-                    message: `Attendance marked successfully`
+    upload.single('profile')(req, res, (err) => {
+        if (err) {
+            return res.status(400).json({
+                success: false,
+                message: err
+            })
+        }
+        if (req?.file?.filename) {
+            try {
+                const image1Path = path.join(__dirname, '../../images/user/'+ req?.body?.image)
+                const image2Path = path.join(__dirname, '../../compare-image/' + req?.file?.filename)
+                compareFaces(image1Path, image2Path).then(isMatch => {
+                    fs.unlink(image2Path, (err => {
+                        if (err)
+                            console.log(err)
+                    }))
+                    if (!isMatch) {
+                        return res.status(500).json({
+                            status: false,
+                            message: 'Face not matched'
+                        })
+                    }
+                    Attendance.updateOne({ 'attendanceData._id': req?.body?.id },
+                        {
+                            $set: {
+                                'attendanceData.$[elem].attendanceStatus': req?.body?.attendanceStatus,
+                                'attendanceData.$[elem].remark': req?.body?.remark
+                            }
+                        },
+                        { arrayFilters: [{ 'elem._id': req?.body?.id }] }).then(result => {
+                            res.status(200).json({
+                                status: true,
+                                message: `Attendance marked successfully`
+                            })
+                        }).catch(err => {
+                            res.status(500).json({
+                                status: false,
+                                message: `Error while marking attendance`
+                            })
+                        })
+                }).catch(err => {
+                    fs.unlink(image2Path, (err => {
+                        if (err)
+                            console.log(err)
+                    }))
+                    res.status(500).json({
+                        status: false,
+                        message: "Error while comparing face"
+                    })
                 })
-            }).catch(err => {
+            } catch (error) {
                 res.status(500).json({
                     status: false,
-                    message: `Error while marking attendance`
+                    message: "Something went wrong"
                 })
+            }
+        }
+        else{
+            res.status(500).json({
+                status: false,
+                message: "Image not found"
             })
-    } catch (error) {
-        res.status(500).json({
-            status: false,
-            message: "Something went wrong"
-        })
-    }
+        }
+    })
 })
 
 router.post('/startAttendance', validateToken, (req, res, next) => {
