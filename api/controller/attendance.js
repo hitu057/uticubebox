@@ -365,9 +365,9 @@ async function compareFaces(image1Path, image2Path) {
         await loadModels()
         const img1 = await loadImage(image1Path)
         const img2 = await loadImage(image2Path)
-        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.2 })
-        const detections1 = await faceapi.detectAllFaces(img1, options).withFaceLandmarks().withFaceDescriptors()
-        const detections2 = await faceapi.detectAllFaces(img2, options).withFaceLandmarks().withFaceDescriptors()
+        // const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.2 })
+        const detections1 = await faceapi.detectAllFaces(img1, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptors()
+        const detections2 = await faceapi.detectAllFaces(img2, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptors()
         console.log(detections1)
         console.log(detections2)
         if (!detections1?.length || !detections2?.length) {
