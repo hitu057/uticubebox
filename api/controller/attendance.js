@@ -16,6 +16,52 @@ const upload = fileDestination(process.env.COMPAREIMAGE, allowedMimes)
 const fs = require('fs')
 const { ObjectId } = require('mongodb')
 
+async function loadModels() {
+    if (!modelsLoaded) {
+        try {
+            await faceapi.nets.tinyFaceDetector.loadFromDisk(MODEL_URL)
+            await faceapi.nets.faceLandmark68Net.loadFromDisk(MODEL_URL)
+            await faceapi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL)
+            modelsLoaded = true
+        } catch (error) {
+            throw error
+        }
+    }
+}
+
+async function loadImage(imagePath) {
+    const img = await canvas.loadImage(imagePath)
+    const canvasInstance = canvas.createCanvas(224, 224)
+    const ctx = canvasInstance.getContext('2d')
+    ctx.drawImage(img, 0, 0, 224, 224)
+    return canvasInstance
+}
+
+async function compareFaces(image1Path, image2Path) {
+    try {
+        await loadModels()
+        const img1 = await loadImage(image1Path)
+        const img2 = await loadImage(image2Path)
+        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.2 })
+        const detections1 = await faceapi.detectAllFaces(img1,options).withFaceLandmarks().withFaceDescriptors()
+        const detections2 = await faceapi.detectAllFaces(img2,options).withFaceLandmarks().withFaceDescriptors()
+        console.log(detections1)
+        console.log(detections2)
+        if (!detections1?.length || !detections2?.length) {
+            console.log('1')
+            return false
+        }
+        const faceMatcher = new faceapi.FaceMatcher(detections1)
+        const bestMatch = detections2?.map(fd => faceMatcher?.findBestMatch(fd?.descriptor))
+        const threshold = 0.2
+        const isMatch = bestMatch.some(match => match.distance < threshold)
+        return isMatch
+    } catch (error) {
+        console.log('2')
+        return false
+    }
+}
+
 router.get('/viewAttendance', validateToken, (req, res, next) => {
     try {
         Attendance.aggregate([
@@ -338,51 +384,5 @@ router.post('/studentAttendance', validateToken, (req, res, next) => {
         })
     }
 })
-
-async function loadModels() {
-    if (!modelsLoaded) {
-        try {
-            await faceapi.nets.tinyFaceDetector.loadFromDisk(MODEL_URL)
-            await faceapi.nets.faceLandmark68Net.loadFromDisk(MODEL_URL)
-            await faceapi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL)
-            modelsLoaded = true
-        } catch (error) {
-            throw error
-        }
-    }
-}
-
-async function loadImage(imagePath) {
-    const img = await canvas.loadImage(imagePath)
-    const canvasInstance = canvas.createCanvas(224, 224)
-    const ctx = canvasInstance.getContext('2d')
-    ctx.drawImage(img, 0, 0, 224, 224)
-    return canvasInstance
-}
-
-async function compareFaces(image1Path, image2Path) {
-    try {
-        await loadModels()
-        const img1 = await loadImage(image1Path)
-        const img2 = await loadImage(image2Path)
-        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.2 })
-        const detections1 = await faceapi.detectAllFaces(img1,options).withFaceLandmarks().withFaceDescriptors()
-        const detections2 = await faceapi.detectAllFaces(img2,options).withFaceLandmarks().withFaceDescriptors()
-        console.log(detections1)
-        console.log(detections2)
-        if (!detections1?.length || !detections2?.length) {
-            console.log('1')
-            return false
-        }
-        const faceMatcher = new faceapi.FaceMatcher(detections1)
-        const bestMatch = detections2?.map(fd => faceMatcher?.findBestMatch(fd?.descriptor))
-        const threshold = 0.2
-        const isMatch = bestMatch.some(match => match.distance < threshold)
-        return isMatch
-    } catch (error) {
-        console.log('2')
-        return false
-    }
-}
 
 module.exports = router
