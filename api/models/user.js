@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema({
         class: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown', required: function () { return this.userType === process?.env?.STUDENT } }
     }],
     fatherName: { type: String, required: function () { return this.userType === process?.env?.STUDENT } },
+    rollNumber: { type: String, required: function () { return this.userType === process?.env?.STUDENT } },
     fatherMobile: { type: Number },
     motherName: { type: String },
     motherMobile: { type: Number },
