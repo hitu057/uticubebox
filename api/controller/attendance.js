@@ -365,7 +365,7 @@ router.post('/studentAttendance', validateToken, (req, res, next) => {
             res.status(200).json({
                 status: true,
                 message: "Student data",
-                data: result
+                data: result.length ? result[0] : {}
             })
         }).catch(err => {
             res.status(500).json({
