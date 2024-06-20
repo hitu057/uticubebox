@@ -42,22 +42,18 @@ async function compareFaces(image1Path, image2Path) {
         await loadModels()
         const img1 = await loadImage(image1Path)
         const img2 = await loadImage(image2Path)
-        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.2 })
+        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
         const detections1 = await faceapi.detectAllFaces(img1,options).withFaceLandmarks().withFaceDescriptors()
         const detections2 = await faceapi.detectAllFaces(img2,options).withFaceLandmarks().withFaceDescriptors()
-        console.log(detections1)
-        console.log(detections2)
         if (!detections1?.length || !detections2?.length) {
-            console.log('1')
             return false
         }
         const faceMatcher = new faceapi.FaceMatcher(detections1)
         const bestMatch = detections2?.map(fd => faceMatcher?.findBestMatch(fd?.descriptor))
-        const threshold = 0.2
+        const threshold = 0.6
         const isMatch = bestMatch.some(match => match.distance < threshold)
         return isMatch
     } catch (error) {
-        console.log('2')
         return false
     }
 }
