@@ -373,7 +373,7 @@ async function compareFaces(image1Path, image2Path) {
         }
         const faceMatcher = new faceapi.FaceMatcher(detections1)
         const bestMatch = detections2?.map(fd => faceMatcher?.findBestMatch(fd?.descriptor))
-        const threshold = 0.6
+        const threshold = 0.2
         const isMatch = bestMatch.some(match => match.distance < threshold)
         return isMatch
     } catch (error) {
