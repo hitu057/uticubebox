@@ -14,14 +14,17 @@ const fileDestination = require('../../config/fileUpload')
 const allowedMimes = ['image/jpeg', 'image/png', 'image/jpg']
 const upload = fileDestination(process.env.COMPAREIMAGE, allowedMimes)
 const fs = require('fs')
+const { ObjectId } = require('mongodb')
 
 router.get('/viewAttendance', validateToken, (req, res, next) => {
     try {
         Attendance.aggregate([
             {
                 $match: {
-                    createdAt: { $gte: new Date('2024-06-18'), $lte: new Date('2024-06-21') },
-                    deleted: false
+                    createdAt: { $gte: new Date(req.body.startdate), $lte: new Date(req.body.enddate) },
+                    deleted: false,
+                    class: new ObjectId(req?.body?.classId),
+                    orgId: new ObjectId(req?.body?.orgId)
                 }
             },
             { $unwind: "$attendanceData" },
