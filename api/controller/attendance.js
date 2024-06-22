@@ -16,7 +16,7 @@ const upload = fileDestination(process.env.COMPAREIMAGE, allowedMimes)
 const fs = require('fs')
 const { ObjectId } = require('mongodb')
 
-router.get('/viewAttendance', validateToken, (req, res, next) => {
+router.post('/viewAttendance', validateToken, (req, res, next) => {
     try {
         Attendance.aggregate([
             {
@@ -129,8 +129,8 @@ router.patch('/markAutomaticAttendance', validateToken, (req, res, next) => {
         }
         if (req?.file?.filename) {
             try {
-                const image1Path = path.join(__dirname, '../../images/user/' + req?.body?.image)
-                const image2Path = path.join(__dirname, '../../compare-image/' + req?.file?.filename)
+                const image1Path = path.join(__dirname, '../../images/user/' + 'bhanu.jpeg')
+                const image2Path = path.join(__dirname, '../../compare-image/' + 'bhanu.jpeg')
                 compareFaces(image1Path, image2Path).then(isMatch => {
                     // fs.unlink(image2Path, (err => {
                     //     if (err)
@@ -145,7 +145,7 @@ router.patch('/markAutomaticAttendance', validateToken, (req, res, next) => {
                     Attendance.updateOne({ 'attendanceData._id': req?.body?.id, deleted: false },
                         {
                             $set: {
-                                'attendanceData.$[elem].attendanceStatus': true,
+                                'attendanceData.$[elem].attendanceStatus': true
                             }
                         },
                         { arrayFilters: [{ 'elem._id': req?.body?.id }] }).then(result => {
