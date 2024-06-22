@@ -129,13 +129,13 @@ router.patch('/markAutomaticAttendance', validateToken, (req, res, next) => {
         }
         if (req?.file?.filename) {
             try {
-                const image1Path = path.join(__dirname, '../../images/user/' + 'bhanu.jpeg')
-                const image2Path = path.join(__dirname, '../../compare-image/' + 'bhanu.jpeg')
+                const image1Path = path.join(__dirname, '../../images/user/' + req?.body?.image)
+                const image2Path = path.join(__dirname, '../../compare-image/' + req?.file?.filename)
                 compareFaces(image1Path, image2Path).then(isMatch => {
-                    // fs.unlink(image2Path, (err => {
-                    //     if (err)
-                    //         console.log(err)
-                    // }))
+                    fs.unlink(image2Path, (err => {
+                        if (err)
+                            console.log(err)
+                    }))
                     if (!isMatch) {
                         return res.status(500).json({
                             status: false,
