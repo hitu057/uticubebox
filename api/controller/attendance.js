@@ -342,7 +342,7 @@ router.post('/studentAttendance', validateToken, (req, res, next) => {
 async function loadModels() {
     if (!modelsLoaded) {
         try {
-            await faceapi.nets.tinyFaceDetector.loadFromDisk(MODEL_URL)
+            await faceapi.nets.ssdMobilenetv1.loadFromDisk(MODEL_URL)
             await faceapi.nets.faceLandmark68Net.loadFromDisk(MODEL_URL)
             await faceapi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL)
             modelsLoaded = true
@@ -353,11 +353,7 @@ async function loadModels() {
 }
 
 async function loadImage(imagePath) {
-    const img = await canvas.loadImage(imagePath)
-    const canvasInstance = canvas.createCanvas(224, 224)
-    const ctx = canvasInstance.getContext('2d')
-    ctx.drawImage(img, 0, 0, 224, 224)
-    return canvasInstance
+    return await canvas.loadImage(imagePath)
 }
 
 async function compareFaces(image1Path, image2Path) {
@@ -365,9 +361,8 @@ async function compareFaces(image1Path, image2Path) {
         await loadModels()
         const img1 = await loadImage(image1Path)
         const img2 = await loadImage(image2Path)
-        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
-        const detections1 = await faceapi.detectAllFaces(img1, options).withFaceLandmarks().withFaceDescriptors()
-        const detections2 = await faceapi.detectAllFaces(img2, options).withFaceLandmarks().withFaceDescriptors()
+        const detections1 = await faceapi.detectAllFaces(img1).withFaceLandmarks().withFaceDescriptors()
+        const detections2 = await faceapi.detectAllFaces(img2).withFaceLandmarks().withFaceDescriptors()
         if (!detections1?.length || !detections2?.length) {
             return false
         }
