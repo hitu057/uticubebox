@@ -418,7 +418,8 @@ router.post('/login', (req, res, next) => {
                         email,
                         mobile,
                         userType,
-                        profile
+                        profile,
+                        role
                     }, process.env.TOKENKEY, { expiresIn: '24h' })
                     res.status(200).json({
                         status: true,

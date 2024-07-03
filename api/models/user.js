@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
     empId: { type: String, required: function () { return this.userType === process?.env?.FACULTY } },
     qualification: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown', required: function () { return this.userType === process?.env?.FACULTY } },
     additionalRes: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown' },
+    role: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown',required: function () { return this.userType === process?.env?.FACULTY } },
     // student
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'dropdown', required: function () { return this.userType === process?.env?.STUDENT } },
     addmissionBatch: [{
