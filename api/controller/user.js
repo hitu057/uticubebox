@@ -392,7 +392,7 @@ router.patch('/saveUserImage/:id', validateToken, (req, res, next) => {
 
 router.post('/login', (req, res, next) => {
     try {
-        User.find({ email: req?.body?.email, orgId: req?.body?.orgId, deleted: false }).exec().then(user => {
+        User.find({ email: req?.body?.email, orgId: req?.body?.orgId, deleted: false }).populate('role').exec().then(user => {
             if (!user?.length) {
                 return res.status(401).json({
                     status: false,
@@ -408,7 +408,7 @@ router.post('/login', (req, res, next) => {
                 }
                 if (result) {
                     const userData = user?.[0]
-                    const { firstname, middelname, lastname, _id, email, mobile, userType, orgId, profile } = userData
+                    const { firstname, middelname, lastname, _id, email, mobile, userType, orgId, profile ,role} = userData
                     const token = jwt.sign({
                         _id,
                         orgId,
@@ -419,7 +419,7 @@ router.post('/login', (req, res, next) => {
                         mobile,
                         userType,
                         profile,
-                        role
+                        role: role?.name
                     }, process.env.TOKENKEY, { expiresIn: '24h' })
                     res.status(200).json({
                         status: true,
