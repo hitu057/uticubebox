@@ -40,7 +40,7 @@ router.post('/', validateToken, (req, res, next) => {
 
 router.get('/', validateToken, (req, res, next) => {
     try {
-        ExamTimeTable.find({ deleted: false },{_id:1}).populate('class','name').populate({path: 'faculty',select: 'firstname middelname lastname'}).populate('timeRange','name').populate('department','name').exec().then(result => {
+        ExamTimeTable.find({ deleted: false },{_id:1,examDate:1}).populate('class','name').populate({path: 'faculty',select: 'firstname middelname lastname'}).populate('timeRange','name').populate('department','name').exec().then(result => {
             return res.status(200).json({
                 status: true,
                 message: "Exam Timetable data",

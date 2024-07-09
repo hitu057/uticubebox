@@ -12,7 +12,8 @@ router.post('/viewAttendance', validateToken, (req, res, next) => {
                 $match: {
                     createdAt: { $gte: new Date(req.body.startdate), $lte: new Date(req.body.enddate) },
                     deleted: false,
-                    class: new ObjectId(req?.body?.classId),
+                    class: new ObjectId(req?.body?.class),
+                    batch: new ObjectId(req?.body?.batch),
                     orgId: new ObjectId(req?.body?.orgId)
                 }
             },
