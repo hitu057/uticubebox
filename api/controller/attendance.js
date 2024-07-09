@@ -3,17 +3,6 @@ const router = express.Router()
 const Attendance = require('../models/attendance')
 const User = require('../models/user')
 const validateToken = require('../middleware/validate-token')
-const faceapi = require('face-api.js')
-const canvas = require('canvas')
-const path = require('path')
-const { Canvas, Image, ImageData } = canvas
-faceapi.env.monkeyPatch({ Canvas, Image, ImageData })
-const MODEL_URL = path.join(__dirname, '../../models')
-let modelsLoaded = false
-const fileDestination = require('../../config/fileUpload')
-const allowedMimes = ['image/jpeg', 'image/png', 'image/jpg']
-const upload = fileDestination(process.env.COMPAREIMAGE, allowedMimes)
-const fs = require('fs')
 const { ObjectId } = require('mongodb')
 
 router.post('/viewAttendance', validateToken, (req, res, next) => {
@@ -120,75 +109,36 @@ router.patch('/markManualAttendance', validateToken, (req, res, next) => {
 })
 
 router.patch('/markAutomaticAttendance', validateToken, (req, res, next) => {
-    upload.single('profile')(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({
-                success: false,
-                message: err
-            })
-        }
-        if (req?.file?.filename) {
-            try {
-                const image1Path = path.join(__dirname, '../../images/user/' + req?.body?.image)
-                const image2Path = path.join(__dirname, '../../compare-image/' + req?.file?.filename)
-                compareFaces(image1Path, image2Path).then(isMatch => {
-                    fs.unlink(image2Path, (err => {
-                        if (err)
-                            console.log(err)
-                    }))
-                    if (!isMatch) {
-                        return res.status(500).json({
-                            status: false,
-                            message: 'Face not matched'
-                        })
-                    }
-                    Attendance.updateOne({ 'attendanceData._id': req?.body?.id, deleted: false },
-                        {
-                            $set: {
-                                'attendanceData.$[elem].attendanceStatus': true
-                            }
-                        },
-                        { arrayFilters: [{ 'elem._id': req?.body?.id }] }).then(result => {
-                            if (result?.matchedCount > 0) {
-                                return res.status(200).json({
-                                    status: true,
-                                    message: `Attendance marked successfully`
-                                })
-                            }
-                            res.status(500).json({
-                                status: false,
-                                message: `Session not found`
-                            })
-                        }).catch(err => {
-                            res.status(500).json({
-                                status: false,
-                                message: `Error while marking attendance`
-                            })
-                        })
-                }).catch(err => {
-                    fs.unlink(image2Path, (err => {
-                        if (err)
-                            console.log(err)
-                    }))
-                    res.status(500).json({
-                        status: false,
-                        message: "Error while comparing face"
+    try {
+        Attendance.updateOne({ 'attendanceData._id': req?.body?.id, deleted: false },
+            {
+                $set: {
+                    'attendanceData.$[elem].attendanceStatus': true
+                }
+            },
+            { arrayFilters: [{ 'elem._id': req?.body?.id }] }).then(result => {
+                if (result?.matchedCount > 0) {
+                    return res.status(200).json({
+                        status: true,
+                        message: `Attendance marked successfully`
                     })
-                })
-            } catch (error) {
+                }
                 res.status(500).json({
                     status: false,
-                    message: "Something went wrong"
+                    message: `Session not found`
                 })
-            }
-        }
-        else {
-            res.status(500).json({
-                status: false,
-                message: "Image not found"
+            }).catch(err => {
+                res.status(500).json({
+                    status: false,
+                    message: `Error while marking attendance`
+                })
             })
-        }
-    })
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Something went wrong"
+        })
+    }
 })
 
 router.post('/startAttendance', validateToken, (req, res, next) => {
@@ -319,7 +269,7 @@ router.post('/stopAttendance', validateToken, (req, res, next) => {
 router.post('/studentAttendance', validateToken, (req, res, next) => {
     try {
         const today = new Date()?.toISOString()?.split('T')?.[0]
-        Attendance.find({ addedAt: today, deleted: false, class: req?.body?.class, timeRange: req?.body?.timeRange, faculty: req?.body?.faculty, batch: req?.body?.batch, department: req?.body?.department }, { _id: 1, attendanceData: 1 }).populate({ path: 'attendanceData.student', select: 'firstname middelname lastname profile rollNumber'}).then(result => {
+        Attendance.find({ addedAt: today, deleted: false, class: req?.body?.class, timeRange: req?.body?.timeRange, faculty: req?.body?.faculty, batch: req?.body?.batch, department: req?.body?.department }, { _id: 1, attendanceData: 1 }).populate({ path: 'attendanceData.student', select: 'firstname middelname lastname profile rollNumber' }).then(result => {
             res.status(200).json({
                 status: true,
                 message: "Student data",
@@ -338,42 +288,5 @@ router.post('/studentAttendance', validateToken, (req, res, next) => {
         })
     }
 })
-
-async function loadModels() {
-    if (!modelsLoaded) {
-        try {
-            await faceapi.nets.ssdMobilenetv1.loadFromDisk(MODEL_URL)
-            await faceapi.nets.faceLandmark68Net.loadFromDisk(MODEL_URL)
-            await faceapi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL)
-            modelsLoaded = true
-        } catch (error) {
-            throw error
-        }
-    }
-}
-
-async function loadImage(imagePath) {
-    return await canvas.loadImage(imagePath)
-}
-
-async function compareFaces(image1Path, image2Path) {
-    try {
-        await loadModels()
-        const img1 = await loadImage(image1Path)
-        const img2 = await loadImage(image2Path)
-        const detections1 = await faceapi.detectAllFaces(img1).withFaceLandmarks().withFaceDescriptors()
-        const detections2 = await faceapi.detectAllFaces(img2).withFaceLandmarks().withFaceDescriptors()
-        if (!detections1?.length || !detections2?.length) {
-            return false
-        }
-        const faceMatcher = new faceapi.FaceMatcher(detections1)
-        const bestMatch = detections2?.map(fd => faceMatcher?.findBestMatch(fd?.descriptor))
-        const threshold = 0.6
-        const isMatch = bestMatch.some(match => match.distance < threshold)
-        return isMatch
-    } catch (error) {
-        return false
-    }
-}
 
 module.exports = router
