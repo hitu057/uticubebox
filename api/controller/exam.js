@@ -4,7 +4,6 @@ const router = express.Router()
 const HallTicket = require('../models/hallTicket')
 const Attendance = require('../models/attendance')
 const validateToken = require('../middleware/validate-token')
-// const { ObjectId } = require('mongodb')
 const mongoose = require('mongoose')
 
 router.post('/studentList', validateToken, (req, res, next) => {
@@ -13,9 +12,9 @@ router.post('/studentList', validateToken, (req, res, next) => {
             {
                 $match: {
                     deleted: false,
-                    class: mongoose.Types.ObjectId(req?.body?.class),
-                    batch: mongoose.Types.ObjectId(req?.body?.batch),
-                    orgId: mongoose.Types.ObjectId(req?.body?.orgId)
+                    class: new mongoose.Types.ObjectId(req?.body?.class),
+                    batch: new mongoose.Types.ObjectId(req?.body?.batch),
+                    orgId: new mongoose.Types.ObjectId(req?.body?.orgId)
                 }
             },
             { $unwind: "$attendanceData" },
