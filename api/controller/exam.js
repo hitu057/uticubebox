@@ -69,6 +69,7 @@ router.post('/studentList', validateToken, (req, res, next) => {
                 data: result
             })
         }).catch(err => {
+            console.log(err)
             res.status(500).json({
                 status: false,
                 message: "Error while fetching student data"
