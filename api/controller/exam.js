@@ -1,37 +1,10 @@
 const express = require('express')
 const router = express.Router()
-const Exam = require('../models/exam')
+// const Exam = require('../models/exam')
 const HallTicket = require('../models/hallTicket')
 const Attendance = require('../models/attendance')
 const validateToken = require('../middleware/validate-token')
 const { ObjectId } = require('mongodb')
-
-router.patch('/markAttendance', validateToken, (req, res, next) => {
-    try {
-        Exam.updateOne({ _id: req?.body?._id, deleted: false }, { attendanceData: req?.body?.attendanceData }).then(result => {
-            if (result?.matchedCount > 0) {
-                return res.status(200).json({
-                    status: true,
-                    message: `Attendance marked successfully`
-                })
-            }
-            res.status(500).json({
-                status: false,
-                message: `Error while marking attendance`
-            })
-        }).catch(err => {
-            res.status(500).json({
-                status: false,
-                message: `Error while marking attendance`
-            })
-        })
-    } catch (error) {
-        res.status(500).json({
-            status: false,
-            message: "Something went wrong"
-        })
-    }
-})
 
 router.post('/studentList', validateToken, (req, res, next) => {
     try {
