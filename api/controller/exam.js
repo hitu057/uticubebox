@@ -1,6 +1,5 @@
 const express = require('express')
 const router = express.Router()
-// const Exam = require('../models/exam')
 const HallTicket = require('../models/hallTicket')
 const Attendance = require('../models/attendance')
 const validateToken = require('../middleware/validate-token')

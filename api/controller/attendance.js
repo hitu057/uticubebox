@@ -3,7 +3,7 @@ const router = express.Router()
 const Attendance = require('../models/attendance')
 const User = require('../models/user')
 const validateToken = require('../middleware/validate-token')
-const { ObjectId } = require('mongodb')
+const mongoose = require('mongoose')
 
 router.post('/viewAttendance', validateToken, (req, res, next) => {
     try {
@@ -12,9 +12,9 @@ router.post('/viewAttendance', validateToken, (req, res, next) => {
                 $match: {
                     createdAt: { $gte: new Date(req.body.startdate), $lte: new Date(req.body.enddate) },
                     deleted: false,
-                    class: new ObjectId(req?.body?.class),
-                    batch: new ObjectId(req?.body?.batch),
-                    orgId: new ObjectId(req?.body?.orgId)
+                    class: new mongoose.Types.ObjectId(req?.body?.class),
+                    batch: new mongoose.Types.ObjectId(req?.body?.batch),
+                    orgId: new mongoose.Types.ObjectId(req?.body?.orgId)
                 }
             },
             { $unwind: "$attendanceData" },
